@@ -18,7 +18,8 @@
         
 -- 	- 2.2 Retrieve rental information and add two additional columns to show the **month and weekday of the rental**. Return 20 rows of results.
 		SELECT *, MONTH(rental_date) AS 'month' , DATE_FORMAT(rental_date, '%W') AS 'weekday_name'
-        FROM sakila.rental;
+        FROM sakila.rental
+        LIMIT 20;
         
 -- 	- 2.3 *Bonus: Retrieve rental information and add an additional column called `DAY_TYPE` with values **'weekend' or 'workday'**, depending on the day of the week.*
 --       - *Hint: use a conditional expression.*
@@ -37,8 +38,9 @@
         ORDER BY title ASC;
 
 -- 4. *Bonus: The marketing team for the movie rental company now needs to create a personalized email campaign for customers. To achieve this, you need to retrieve the **concatenated first and last names of customers**, along with the **first 3 characters of their email** address, so that you can address them by their first name and use their email address to send personalized recommendations. The results should be ordered by last name in ascending order to make it easier to use the data.*
-		SELECT *, concat(first_name, last_name, substr(email, 1, 3)) AS 'personalized_email'
-        FROM sakila.customer;
+		SELECT *, concat(first_name, last_name, LEFT(email, 3)) AS 'personalized_email'
+        FROM sakila.customer
+        ORDER BY last_name ASC;
 
 -- ## Challenge 2
 
@@ -48,63 +50,29 @@
         FROM sakila.film;
         
 -- 	- 1.2 The **number of films for each rating**.
-		SELECT DISTINCT rating
-        FROM film;
-        
-		SELECT 
-		SUM(CASE WHEN rating = 'G' THEN 1 ELSE 0 END) AS g_count,
-        SUM(CASE WHEN rating = 'PG' THEN 1 ELSE 0 END) AS pg_count,
-        SUM(CASE WHEN rating = 'PG-13' THEN 1 ELSE 0 END) AS pg13_count,
-        SUM(CASE WHEN rating = 'R' THEN 1 ELSE 0 END) AS r_count,
-        SUM(CASE WHEN rating = 'NC-17' THEN 1 ELSE 0 END) AS nc17_count
-        FROM sakila.film;
+		SELECT rating, COUNT(*) AS count
+		FROM sakila.film
+		GROUP BY rating;
         
 -- 	- 1.3 The **number of films for each rating, sorting** the results in descending order of the number of films.
 -- 	This will help you to better understand the popularity of different film ratings and adjust purchasing decisions accordingly.
-		SELECT rating, count
-		FROM (
-			SELECT 'G' AS rating, SUM(CASE WHEN rating = 'G' THEN 1 ELSE 0 END) AS count FROM sakila.film
-			UNION ALL
-			SELECT 'PG', SUM(CASE WHEN rating = 'PG' THEN 1 ELSE 0 END) FROM sakila.film
-			UNION ALL
-			SELECT 'PG-13', SUM(CASE WHEN rating = 'PG-13' THEN 1 ELSE 0 END) FROM sakila.film
-			UNION ALL
-			SELECT 'R', SUM(CASE WHEN rating = 'R' THEN 1 ELSE 0 END) FROM sakila.film
-			UNION ALL
-			SELECT 'NC-17', SUM(CASE WHEN rating = 'NC-17' THEN 1 ELSE 0 END) FROM sakila.film
-		) AS counts
+		SELECT rating, COUNT(*) AS count
+		FROM sakila.film
+		GROUP BY rating
 		ORDER BY count DESC;
         
 -- 2. Using the `film` table, determine:
 --    - 2.1 The **mean film duration for each rating**, and sort the results in descending order of the mean duration. Round off the average lengths to two decimal places. This will help identify popular movie lengths for each category.
-		SELECT rating, avg_runtime
-		FROM (
-			SELECT 'G' AS rating, ROUND(AVG(length), 2) AS avg_runtime FROM sakila.film WHERE rating = 'G'
-			UNION ALL
-			SELECT 'PG', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'PG'
-			UNION ALL
-			SELECT 'PG-13', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'PG-13'
-			UNION ALL
-			SELECT 'R', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'R'
-			UNION ALL
-			SELECT 'NC-17', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'NC-17'
-		) AS means
+		SELECT rating, ROUND(AVG(length), 2) AS avg_runtime
+		FROM sakila.film
+		GROUP BY rating
 		ORDER BY avg_runtime DESC;
         
 -- 	- 2.2 Identify **which ratings have a mean duration of over two hours** in order to help select films for customers who prefer longer movies.
-		SELECT rating, avg_runtime
-		FROM (
-			SELECT 'G' AS rating, ROUND(AVG(length), 2) AS avg_runtime FROM sakila.film WHERE rating = 'G'
-			UNION ALL
-			SELECT 'PG', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'PG'
-			UNION ALL
-			SELECT 'PG-13', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'PG-13'
-			UNION ALL
-			SELECT 'R', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'R'
-			UNION ALL
-			SELECT 'NC-17', ROUND(AVG(length), 2) FROM sakila.film WHERE rating = 'NC-17'
-		) AS means
-        WHERE avg_runtime > 120
+		SELECT rating, ROUND(AVG(length), 2) AS avg_runtime
+		FROM sakila.film
+		GROUP BY rating
+        HAVING avg_runtime > 120
 		ORDER BY avg_runtime DESC;
         
 -- 3. *Bonus: determine which last names are not repeated in the table `actor`.*
